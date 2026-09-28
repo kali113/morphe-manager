@@ -470,7 +470,7 @@ Zona luar (putus-putus): mungkin terpotong oleh masker launcher - jaga detail pe
     <string name="home_app_info_patch_update_available">Pembaruan tambalan tersedia</string>
     <string name="home_app_info_patch_update_available_description">Versi tambalan lebih baru tersedia. Tambal ulang aplikasi Anda untuk mendapatkan pembaruan terbaru dan perbaikan</string>
     <string name="home_app_info_app_update_available">Pembaruan aplikasi tersedia</string>
-    <string name="home_app_info_app_update_available_description">Sumber patch mendukung versi yang lebih barru dari aplikasi ini. Patch lagi untuk berpindah ke versi tersebut.</string>
+    <string name="home_app_info_app_update_available_description">Sumber tambalan mendukung versi terbaru dari aplikasi ini. Tambal lagi untuk berpindah ke versi tersebut</string>
     <string name="home_app_info_newest_supported_version">Versi terbaru yang didukung</string>
     <string name="home_app_info_version_move">Versi terpasang %1$s, versi terbaru yang didukung %2$s</string>
     <string name="home_app_info_app_deleted_warning">Aplikasi telah dicopot</string>

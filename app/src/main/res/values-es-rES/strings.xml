@@ -184,7 +184,7 @@
     <string name="sources_dialog_local_invalid_extension">El archivo debe tener una extensión .mpp</string>
     <!-- %s is the name of the local source that another version of the same bundle replaces -->
     <string name="sources_dialog_local_updates">Actualiza %s</string>
-    <string name="sources_dialog_url_valid">Repositorio o URL JSON válido</string>
+    <string name="sources_dialog_url_valid">Repositorio o URL JSON válidos</string>
     <string name="sources_dialog_url_invalid">La URL debe apuntar a un repositorio de GitHub/GitLab o a un archivo .json</string>
     <string name="sources_dialog_preinstalled">Preinstalada</string>
     <string name="sources_dialog_community">Parches de la comunidad</string>
@@ -263,7 +263,7 @@ Todo lo que añadas desde este sitio web lo haces bajo tu propia responsabilidad
     <!-- Home Screen - Dialog 3: File Picker Prompt -->
     <string name="home_file_picker_prompt_title">Selecciona el APK descargado</string>
     <string name="home_file_picker_prompt_description">Selecciona el archivo APK de &lt;b&gt;%s&lt;/b&gt; que acabas de descargar</string>
-    <string name="home_file_picker_prompt_open_apk">Abrir el archivo APK</string>
+    <string name="home_file_picker_prompt_open_apk">Abrir archivo APK</string>
     <string name="home_recommended_version">Versión recomendada</string>
     <string name="home_selected_version">Versión seleccionada</string>
     <string name="home_select_apk_title">Selecciona el APK</string>
@@ -1208,8 +1208,8 @@ Detalles: %2$s"</string>
     <string name="exclude">Excluir</string>
     <string name="excluded">Excluido</string>
     <string name="include">Incluir</string>
-    <string name="disable">Deshabilitar</string>
-    <string name="enable">Habilitar</string>
+    <string name="disable">Desactivar</string>
+    <string name="enable">Activar</string>
     <string name="loading">Cargando…</string>
     <string name="creating">Creando…</string>
     <string name="processing_apk">Procesando APK…</string>
