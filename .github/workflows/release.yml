@@ -77,7 +77,9 @@ jobs:
         uses: actions/attest-build-provenance@v4
         with:
           subject-name: 'Morphe Manager ${{ steps.release.outputs.new_release_git_tag }}'
-          subject-path: app/build/outputs/apk/release/morphe-manager*.apk
+          subject-path: |
+            app/build/outputs/apk/release/morphe-manager*.apk
+            app/build/outputs/apk/release/abi/morphe-manager*.apk
 
       - name: Generate website deploy token
         if: steps.release.outputs.new_release_published == 'true'

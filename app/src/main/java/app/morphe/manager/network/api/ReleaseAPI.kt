@@ -10,6 +10,7 @@
 
 package app.morphe.manager.network.api
 
+import android.os.Build
 import android.util.Log
 import app.morphe.manager.BuildConfig
 import app.morphe.manager.domain.bundles.PatchBundleSource
@@ -367,13 +368,16 @@ class ReleaseAPI(
     ): ReleaseAsset {
         val version = releaseInfo.version.withVersionPrefix()
         return ReleaseAsset(
-            downloadUrl = releaseInfo.downloadUrl,
+            downloadUrl = ManagerApk.downloadUrl(releaseInfo.downloadUrl, releaseInfo.abiDownloadUrls, supportedAbis),
             createdAt = parseTimestamp(releaseInfo.createdAt),
             pageUrl = releasePageUrl(config.htmlUrl, version),
             description = releaseInfo.description,
             version = version
         )
     }
+
+    /** The ABIs of this device in order of preference, which pick the manager APK to update to. */
+    private val supportedAbis get() = Build.SUPPORTED_ABIS?.filter { it.isNotBlank() }.orEmpty()
 
     private fun mapPatchesJsonToAsset(
         config: RepoConfig,
@@ -402,7 +406,10 @@ class ReleaseAPI(
     /** Fetches the latest manager release metadata from GitHub Releases. */
     private suspend fun getManagerFromGitHub(): APIResponse<ReleaseAsset> {
         val includePrerelease = prefs.useManagerPrereleases.get()
-        return fetchReleaseAsset(managerConfig, includePrerelease, ::isManagerAsset)
+        return fetchReleaseAsset(managerConfig, includePrerelease) { assets ->
+            val apks = assets.filter(::isManagerAsset)
+            ManagerApk.pick(apks.map { it.name }, supportedAbis)?.let { name -> apks.first { it.name == name } }
+        }
     }
 
     /**
@@ -532,7 +539,7 @@ class ReleaseAPI(
     }
 
     /**
-     * Fetches the most recent GitHub release that passes [matcher] for its assets.
+     * Fetches the most recent GitHub release that [select] picks an asset of.
      *
      * Pre-releases are included only when [includePrerelease] is true.
      * Draft releases are always skipped.
@@ -540,17 +547,17 @@ class ReleaseAPI(
     private suspend fun fetchReleaseAsset(
         config: RepoConfig,
         includePrerelease: Boolean,
-        matcher: (GitHubAsset) -> Boolean
+        select: (List<GitHubAsset>) -> GitHubAsset?
     ): APIResponse<ReleaseAsset> {
         return when (val r = githubRequest<List<GitHubRelease>>(config, "releases")) {
             is APIResponse.Success -> runCatching {
-                val release = r.data.firstOrNull { release ->
-                    !release.draft
-                            && (includePrerelease || !release.prerelease)
-                            && release.assets.any(matcher)
+                val (release, asset) = r.data.firstNotNullOfOrNull { release ->
+                    release.takeIf { !it.draft && (includePrerelease || !it.prerelease) }
+                        ?.let { select(it.assets) }
+                        ?.let { release to it }
                 } ?: throw IllegalStateException("No matching release found in ${config.name}")
 
-                mapReleaseToAsset(config, release, release.assets.first(matcher))
+                mapReleaseToAsset(config, release, asset)
             }.fold(
                 onSuccess = { APIResponse.Success(it) },
                 onFailure = { APIResponse.Failure(APIFailure(it, null)) }

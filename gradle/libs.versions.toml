@@ -121,8 +121,10 @@ kotlin-test-junit = { group = "org.jetbrains.kotlin", name = "kotlin-test-junit"
 
 # XZ: the build unpacks the JVM builds with it and packs the embedded JVM, which the app unpacks
 xz = { group = "org.tukaani", name = "xz", version.ref = "xz" }
+# apksig: signs the APK of each ABI the build makes from the universal one
+apksig = { group = "com.android.tools.build", name = "apksig", version.ref = "android-gradle-plugin" }
 # ProGuard: shrinks the patcher host the embedded JVM runs
-proguard = { group = "com.guardsquare", name = "proguard-base", version.ref = "proguard" }
+proguard ={ group = "com.guardsquare", name = "proguard-base", version.ref = "proguard" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "android-gradle-plugin" }

@@ -55,6 +55,34 @@ if [ -n "${SIGNATURE_URL}" ]; then
   wait_for_asset "${SIGNATURE_URL}" "${SIGNATURE_ATTEMPTS}"
 fi
 
+# The APK of each ABI goes up only once the universal one is live, so a release never offers them
+# alone. Their names sort behind the universal APK, see prepare-release.sh
+ABI_DIR="app/build/outputs/apk/release/abi"
+ABI_URLS=$(node -e "console.log(Object.values(JSON.parse(require('fs').readFileSync('${RELEASE_JSON}','utf8')).abi_download_urls ?? {}).join('\n'))")
+
+publish_abi_apks() {
+  gh release upload "v${VERSION}" "${ABI_DIR}"/*.apk "${ABI_DIR}"/*.apk.asc --clobber \
+    --repo "${GITHUB_REPOSITORY:-MorpheApp/morphe-manager}" || return 1
+
+  # The updater offers the APK of the device as soon as the JSON lists it, so every one must be live
+  local abi_url
+  while IFS= read -r abi_url; do
+    wait_for_asset "${abi_url}" "${APK_ATTEMPTS}" || return 1
+  done <<< "${ABI_URLS}"
+}
+
+# The universal APK alone still updates every device, so a failure here only drops the APKs
+# per ABI from the JSON rather than holding back the release for everyone
+if [ -n "${ABI_URLS}" ] && ! publish_abi_apks; then
+  echo "WARNING: The APKs per ABI are not all available, publishing the universal APK alone"
+  node -e "
+    const fs = require('fs');
+    const release = JSON.parse(fs.readFileSync('${RELEASE_JSON}', 'utf8'));
+    delete release.abi_download_urls;
+    fs.writeFileSync('${RELEASE_JSON}', JSON.stringify(release, null, 2) + '\n');
+  "
+fi
+
 git config user.name "${GIT_AUTHOR_NAME:-github-actions[bot]}"
 git config user.email "${GIT_AUTHOR_EMAIL:-41898282+github-actions[bot]@users.noreply.github.com}"
 

@@ -1,3 +1,4 @@
+import com.android.build.api.artifact.SingleArtifact
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -515,5 +516,23 @@ androidComponents {
             licenseUrls.set(licensesByUrl)
         }
         variant.sources.assets?.addGeneratedSourceDirectory(licensesAssets, LicensesAssetsTask::outputDirectory)
+
+        // The universal APK carries the embedded JVM of every ABI, while a device runs one of them.
+        // Releases ship an APK per ABI beside it, which the in-app updater picks for the device
+        val signingConfig = android.buildTypes.getByName(variant.buildType!!).signingConfig
+        if (signingConfig != null) {
+            tasks.register<AbiApksTask>("${variant.name}AbiApks") {
+                group = "build"
+                description = "Builds an APK per ABI from the $variantName APK, each with the native libraries and embedded JVM of its ABI alone."
+                apkDirectory.set(variant.artifacts.get(SingleArtifact.APK))
+                keyStore.fileProvider(provider { signingConfig.storeFile })
+                keyStoreType.set(provider { signingConfig.storeType })
+                keyStorePassword.set(provider { signingConfig.storePassword })
+                keyAlias.set(provider { signingConfig.keyAlias })
+                keyPassword.set(provider { signingConfig.keyPassword })
+                minSdk.set(variant.minSdk.apiLevel)
+                outputDirectory.set(layout.buildDirectory.dir("outputs/apk-abi/${variant.name}"))
+            }
+        }
     }
 }

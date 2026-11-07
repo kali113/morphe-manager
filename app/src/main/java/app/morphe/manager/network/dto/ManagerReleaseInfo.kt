@@ -16,8 +16,12 @@ import kotlinx.serialization.Serializable
 data class ManagerReleaseInfo(
     @SerialName("version")
     val version: String,
+    /** The universal APK, which runs on every device. */
     @SerialName("download_url")
     val downloadUrl: String,
+    /** The APK of each ABI by its name, which leaves out the native code of all others. */
+    @SerialName("abi_download_urls")
+    val abiDownloadUrls: Map<String, String> = emptyMap(),
     @SerialName("created_at")
     val createdAt: String,
     @SerialName("description")
