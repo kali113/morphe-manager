@@ -52,22 +52,21 @@ for ABI_SRC in "${ABI_SRC_DIR}"/*.apk; do
   echo "Signed ${ABI_DST}"
 done
 
+# A build for a single ABI has no APK per ABI to make, and its universal APK is all a release needs
 if [ "${#ABIS[@]}" -eq 0 ]; then
-  echo "ERROR: No per-ABI APKs found in ${ABI_SRC_DIR}"
-  exit 1
-fi
+  echo "No APKs per ABI in ${ABI_SRC_DIR}, releasing the universal APK alone"
+else
+  # GitHub sorts by name regardless of case. Should a rename ever put an APK per ABI first, a
+  # manager from before them would update to an APK only some devices install
+  FIRST_APK=$(for APK in "${APK_DST}" "${ABI_DIR}"/*.apk; do basename "${APK}"; done | LC_ALL=C sort -f | head -1)
+  if [ "${FIRST_APK}" != "$(basename "${APK_DST}")" ]; then
+    echo "ERROR: ${FIRST_APK} sorts before the universal APK, which older managers would update to"
+    exit 1
+  fi
 
-# GitHub sorts by name regardless of case. Should a rename ever put an APK per ABI first, a manager
-# from before them would update to an APK only some devices install
-FIRST_APK=$(for APK in "${APK_DST}" "${ABI_DIR}"/*.apk; do basename "${APK}"; done | LC_ALL=C sort -f | head -1)
-if [ "${FIRST_APK}" != "$(basename "${APK_DST}")" ]; then
-  echo "ERROR: ${FIRST_APK} sorts before the universal APK, which older managers would update to"
-  exit 1
-fi
-
-# 6. List them in the release JSON, beside the universal APK it already points at, so the
-#    in-app updater can download the one for its device
-node - "app-release.json" "${ABIS[@]}" <<'EOF'
+  # 6. List them in the release JSON, beside the universal APK it already points at, so the
+  #    in-app updater can download the one for its device
+  node - "app-release.json" "${ABIS[@]}" <<'EOF'
 const fs = require('fs');
 const [file, ...abis] = process.argv.slice(2);
 const release = JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -77,6 +76,7 @@ release.abi_download_urls = Object.fromEntries(
 );
 fs.writeFileSync(file, `${JSON.stringify(release, null, 2)}\n`);
 EOF
-echo "Listed the APKs of ${ABIS[*]} in app-release.json"
+  echo "Listed the APKs of ${ABIS[*]} in app-release.json"
+fi
 
 echo "Release v${VERSION} prepared successfully."

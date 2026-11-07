@@ -76,14 +76,19 @@ abstract class AbiApksTask : DefaultTask() {
 
         val entries = ZipFile(universal).use { zip -> zip.entries().asSequence().map { it.name }.toList() }
         val abis = entries.mapNotNull { LIBRARY.matchEntire(it)?.groupValues?.get(1) }.distinct().sorted()
-        if (abis.size < 2) throw GradleException("$universal ships native libraries for ${abis.size} ABI(s), there is nothing to split")
-
-        val (key, certificates) = signingKey()
 
         val output = outputDirectory.get().asFile.apply {
             deleteRecursively()
             mkdirs()
         }
+
+        // An APK for one ABI or none already is what the APK of that ABI would be
+        if (abis.size < 2) {
+            logger.lifecycle("${universal.name} ships native libraries for ${abis.size} ABI(s), there is nothing to split")
+            return
+        }
+
+        val (key, certificates) = signingKey()
 
         abis.forEach { abi ->
             val apk = output.resolve("$abi.apk")

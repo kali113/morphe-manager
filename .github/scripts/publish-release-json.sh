@@ -71,10 +71,20 @@ publish_abi_apks() {
   done <<< "${ABI_URLS}"
 }
 
-# The universal APK alone still updates every device, so a failure here only drops the APKs
-# per ABI from the JSON rather than holding back the release for everyone
+# The universal APK alone still updates every device, so a failure here drops the APKs per ABI
+# rather than holding back the release for everyone, after at most one wait for an asset
 if [ -n "${ABI_URLS}" ] && ! publish_abi_apks; then
   echo "WARNING: The APKs per ABI are not all available, publishing the universal APK alone"
+
+  # Whatever of them did go up comes off again, as the updater picks the APK of its device from
+  # the release itself whenever the JSON cannot be read
+  for ABI_FILE in "${ABI_DIR}"/*.apk "${ABI_DIR}"/*.apk.asc; do
+    [ -e "${ABI_FILE}" ] || continue
+    gh release delete-asset "v${VERSION}" "$(basename "${ABI_FILE}")" --yes \
+      --repo "${GITHUB_REPOSITORY:-MorpheApp/morphe-manager}" 2>/dev/null \
+      || echo "WARNING: Could not remove $(basename "${ABI_FILE}") from the release"
+  done
+
   node -e "
     const fs = require('fs');
     const release = JSON.parse(fs.readFileSync('${RELEASE_JSON}', 'utf8'));

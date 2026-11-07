@@ -21,11 +21,10 @@ internal object ManagerApk {
 
     /**
      * The APK for a device with [supportedAbis] out of [apkNames], the names of the APKs a release
-     * on GitHub lists, null where it lists none.
+     * on GitHub lists. Null where it lists none, or only APKs for ABIs the device does not run.
      */
     fun pick(apkNames: List<String>, supportedAbis: List<String>): String? {
         val abiApks = apkNames.mapNotNull { name -> abiOf(name)?.let { it to name } }.toMap()
-        // A release whose every APK is for an ABI this device does not run has nothing for it
         return supportedAbis.firstNotNullOfOrNull { abiApks[it] }
             ?: apkNames.firstOrNull { abiOf(it) == null }
     }
